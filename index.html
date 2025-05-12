@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Contraseñas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            flex-grow: 1;
+        }
+        h1 {
+            color: #333;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        button, input[type="text"], input[type="password"] {
+            width: 90%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f8f8f8;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+        .delete, .toggle, .edit {
+            background-color: #ff4d4d;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-left: 5px;
+        }
+        .delete:hover {
+            background-color: #cc0000;
+        }
+        .toggle, .edit {
+            background-color: #007bff;
+        }
+        .toggle:hover, .edit:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestor de Contraseñas</h1>
+        <input type="text" id="name" placeholder="Nombre del sitio">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="savePassword()">Guardar Contraseña</button>
+        <ul id="passwordList"></ul>
+    </div>
+    <div class="container">
+        <h1>Generador de Contraseñas</h1>
+        <input type="text" id="generatedPassword" placeholder="Contraseña generada" readonly>
+        <button onclick="generatePassword()">Generar Contraseña</button>
+    </div>
+    <script>
+        function generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
+            let password = '';
+            for (let i = 0; i < 12; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('generatedPassword').value = password;
+        }
+        function savePassword() {
+            const site = document.getElementById('name').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (site && password) {
+                const passwords = JSON.parse(localStorage.getItem('passwords')) || [];
+                passwords.push({ site, password, visible: false });
+                localStorage.setItem('passwords', JSON.stringify(passwords));
+                document.getElementById('name').value = '';
+                document.getElementById('password').value = '';
+                renderPasswords();
+            }
+        }
+        function renderPasswords() {
+            const passwords = JSON.parse(localStorage.getItem('passwords')) || [];
+            const list = document.getElementById('passwordList');
+            list.innerHTML = '';
+            passwords.forEach((entry, index) => {
+                const passwordText = entry.visible ? entry.password : '********';
+                list.innerHTML += `<li>
+                    <strong>${entry.site}</strong>: <span>${passwordText}</span>
+                    <button class="toggle" onclick="toggleVisibility(${index})">${entry.visible ? 'Ocultar' : 'Ver'}</button>
+                    <button class="edit" onclick="editPassword(${index})">Editar</button>
+                    <button class="delete" onclick="deletePassword(${index})">Eliminar</button>
+                </li>`;
+            });
+        }
+        function toggleVisibility(index) {
+            const passwords = JSON.parse(localStorage.getItem('passwords')) || [];
+            passwords[index].visible = !passwords[index].visible;
+            localStorage.setItem('passwords', JSON.stringify(passwords));
+            renderPasswords();
+        }
+        function deletePassword(index) {
+            const passwords = JSON.parse(localStorage.getItem('passwords')) || [];
+            passwords.splice(index, 1);
+            localStorage.setItem('passwords', JSON.stringify(passwords));
+            renderPasswords();
+        }
+        function editPassword(index) {
+            const passwords = JSON.parse(localStorage.getItem('passwords')) || [];
+            const newPassword = prompt('Nueva contraseña:', passwords[index].password);
+            if (newPassword !== null) {
+                passwords[index].password = newPassword;
+                passwords[index].visible = false;
+                localStorage.setItem('passwords', JSON.stringify(passwords));
+                renderPasswords();
+            }
+        }
+        document.addEventListener('DOMContentLoaded', renderPasswords);
+    </script>
+</body>
+</html>
